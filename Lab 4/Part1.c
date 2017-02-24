@@ -8,7 +8,7 @@ unsigned int half_period = 18181;
 ISR (TIMER2_COMPA_vect) {
 	OCR1A += half_period;
 }
-
+//adding a comment
 int main(void)
 {
 	DDRB |= (1 << PB1);
