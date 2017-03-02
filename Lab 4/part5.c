@@ -24,25 +24,191 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+volatile int row_to_check;
+
+void zeroFrequency() {
+	OCR1A = 0;
+	OCR0A = 0;	
+}
+void decode() {
+	if (row_to_check == 4) {
+		PORTC &= ~(1 << PC2);
+		PORTC |= (1 << PC3) | (1 << PC4) | (1 << PC5);
+		if (((PIND & (1 << PD2)) >> PD2) == 0) {
+			//column 1 -> '1'
+			OCR1A = 11477;
+			OCR0A = 103;			
+			while(((PIND & (1 << PD2)) >> PD2) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD3)) >> PD3) == 0) {
+			//column 2 -> '2'
+			OCR1A = 11477;
+			OCR0A = 93;
+			while(((PIND & (1 << PD3)) >> PD3) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD4)) >> PD4) == 0) {
+			//column 3 - '3'
+			OCR1A = 11477;
+			OCR0A = 84;
+			while(((PIND & (1 << PD4)) >> PD4) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD5)) >> PD5) == 0) {
+			//column 4 -> 'A'
+			OCR1A = 11477;
+			OCR0A = 76;
+			while(((PIND & (1 << PD5)) >> PD5) == 0);
+			zeroFrequency();
+		}
+		else {
+		}
+		row_to_check = 3;
+	}
+	
+	else if (row_to_check == 3) {
+		PORTC &= ~(1 << PC3);
+		PORTC |= (1 << PC2) | (1 << PC4) | (1 << PC5);
+		if (((PIND & (1 << PD2)) >> PD2) == 0) {
+			//column 1 -> '4'
+			OCR1A = 10389;
+			OCR0A = 103;
+			while(((PIND & (1 << PD2)) >> PD2) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD3)) >> PD3) == 0) {
+			//column 2 -> '5'
+			OCR1A = 10389;
+			OCR0A = 93;
+			while(((PIND & (1 << PD3)) >> PD3) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD4)) >> PD4) == 0) {
+			//column 3 -> '6'
+			OCR1A = 10389;
+			OCR0A = 64;
+			while(((PIND & (1 << PD4)) >> PD4) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD5)) >> PD5) == 0) {
+			//column 4 -> 'B'
+			OCR1A = 10389;
+			OCR0A = 76;
+			while(((PIND & (1 << PD5)) >> PD5) == 0);
+			zeroFrequency();
+		}
+		else {
+		}
+		row_to_check = 2;
+	}
+	else if (row_to_check == 2) {
+		PORTC &= ~(1 << PC4);
+		PORTC |= (1 << PC2) | (1 << PC3) | (1 << PC5);
+		if (((PIND & (1 << PD2)) >> PD2) == 0) {
+			//column 1 -> '7'
+			OCR1A = 9389;
+			OCR0A = 103;
+			while(((PIND & (1 << PD2)) >> PD2) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD3)) >> PD3) == 0) {
+			//column 2 -> '8'
+			OCR1A = 9389;
+			OCR0A = 93;
+			while(((PIND & (1 << PD3)) >> PD3) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD4)) >> PD4) == 0) {
+			//column 3 -> '9'
+			OCR1A = 9389;
+			OCR0A = 84;
+			while(((PIND & (1 << PD4)) >> PD4) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD5)) >> PD5) == 0) {
+			//column 4 -> 'C'
+			OCR1A = 9389;
+			OCR0A = 76;
+			while(((PIND & (1 << PD5)) >> PD5) == 0);
+			zeroFrequency();
+		}
+		else {
+		}
+		row_to_check = 1;
+	}
+	else {
+		PORTC &= ~(1 << PC5);
+		PORTC |= (1 << PC2) | (1 << PC3) | (1 << PC4);
+		if (((PIND & (1 << PD2)) >> PD2) == 0) {
+			//column 1 -> '*'
+			OCR1A = 8501;
+			OCR0A = 103;
+			while(((PIND & (1 << PD2)) >> PD2) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD3)) >> PD3) == 0) {
+			//column 2 -> '0'
+			OCR1A = 8501;
+			OCR0A = 93;
+			while(((PIND & (1 << PD3)) >> PD3) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD4)) >> PD4) == 0) {
+			//column 3 -> '#'
+			OCR1A = 8501;
+			OCR0A = 84;
+			while(((PIND & (1 << PD4)) >> PD4) == 0);
+			zeroFrequency();
+		}
+		else if (((PIND & (1 << PD5)) >> PD5) == 0) {
+			//column 4 -> 'D'
+			OCR1A = 8501;
+			OCR0A = 76;
+			while(((PIND & (1 << PD5)) >> PD5) == 0);
+			zeroFrequency();
+		}
+		else {
+		}
+		row_to_check = 4;
+	}
+}
+
 void init_timer0() {
 	TCCR0A |= (1 << COM0A0); //toggle OC0A on compare match
 	TCCR0A |= (1 << WGM01); // enable CTC mode
-	TCCR0B |= (1 << x01) | (1 << x00); //enable 64 prescaler	
+	TCCR0B |= (1 << 1) | (1 << 0); //enable 64 prescaler	
 }
 
 void init_timer1() {
 	TCCR1A |= (1 << COM1A0); //toggle OC1A on compare match
 	TCCR1B |= (1 << WGM12); // enable CTC mode
-	TCCR1B |= (1 << x00); //enable no prescaler
+	TCCR1B |= (1 << 0); //enable no prescaler
+}
+
+void init_timer2() {	
+	TCCR2A |= (1 << WGM21); //Sets to CTC mode (clears TCNT2 when OCR2A == TCNT2)
+	TCCR2B |= (1 << 2) | (1 << 1); 	//enable TIMER2 with prescaler = 256
+	OCR2A = 255;
+	TIMSK2 |= 0x02; 	//Enable Output Compare A Match Interrupt
+}
+
+ISR(TIMER2_COMPA_vect) {
+	decode();
 }
 
 int main() {
+	DDRC |= (1 << PC2) | (1 << PC3) | (1 << PC4) | (1 << PC5); //set rows as output
 	DDRB |= (1 << PB1); //set PB1 and PD6 to outputs
 	DDRD |= (1 << PD6);
 	init_timer0();
 	init_timer1();
-	OCR1A = 11477;
-	OCR0A = 103;
+	init_timer2();
+	zeroFrequency();	
+	sei();
+
+	row_to_check = 4;
+	TCNT2 = 0;
 	
 	while(1);		
 }
