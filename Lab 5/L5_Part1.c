@@ -51,6 +51,8 @@ int main(void)
 		if (sampleCollected) {
 			//PRINT DIFF
 			TIMSK1 = 0; //disable interrupts
+			DDRB |= (1 << PB1); //PB1 is output
+			PORTB |= (1 << PORTB1); //Set PB1 to high
 			TCNT1 = 0; // clear timer count
 			TIMSK1 |= (1 << OCIE1A); // enable OCA interrupt
 			sampleCollected = 0;
