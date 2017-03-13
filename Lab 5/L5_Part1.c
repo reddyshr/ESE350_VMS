@@ -9,17 +9,19 @@ volatile int sampleCollected;
 
 
 void init_oc_timer1() {
-	TIMSK1 = 0; //disable all interrupts
-	TCCR1A |= (1 << COM1A1); // clear PB1 on output compare
-	OCR1A = x07; // set OC register to 7 -> 5 us
-	TIMSK1 |= (1 << OCIE1A); // enable OCA interrupt
-	TCCR1B |= (1 << CS10); // no prescaler/start timer
+	TIMSK1  = 0;               //disable all interrupts
+	TCCR1A |= (1 << COM1A1);   //clear PB1/OC1A on output compare
+	TIMSK1 |= (1 << OCIE1A);   //enable OCA interrupt
+	TCCR1B |= (1 << CS10);     //no prescaler/start timer
+	//OCR1A   = 0x07;            //set OC register to 7 -> 5 us
+	OCR1A = TCNT1 + 79;        //79 cycles = 5us, trigger in 5 us
 }
 
 void init_ic_timer1() {
-	TIMSK1 = 0; //disconnect output compare interrupt
-	TCCR1B |= (1 << ICES1); // trigger is rising edge	
-	TIMSK1 |= (1 << ICIE1); //enable input capt interrupt
+	TIMSK1  = 0;               //disable output compare interrupt
+	TIMSK1 |= (1 << ICIE1);    //enable input capt interrupt
+	TCCR1B |= (1 << ICES1);    //trigger is rising edge	
+	TIFR1  |= 0x20;            //clear the input capture flag
 }
 
 ISR(TIMER1_CAPT_vect) {
@@ -33,21 +35,21 @@ ISR(TIMER1_CAPT_vect) {
 	}
 }
 ISR(TIMER1_COMPA_vect) {
-	DDRB &= ~(1 << PB1); //Set PB1 to input
-	init_ic_timer1(); // set timer1 for input capture
-	TCNT1 = 0; //reset timer count
+	DDRB &= ~(1 << PB1);       //Set PB1 to input
+	init_ic_timer1();          //set timer1 for input capture
+	TCNT1 = 0;                 //reset timer count
 }
 
 
 int main(void)
 {
-	DDRB |= (1 << PB1); //PB1 is output
-	PORTB |= (1 << PORTB1); //Set PB1 to high
+	DDRB  |= (1 << PB1);      //PB1 is output
+	PORTB |= (1 << PORTB1);   //Set PB1 to high
 	init_oc_timer1();
 	sei();
 	
-    while(1)
-    {    
+  while(1)
+  {    
 		if (sampleCollected) {
 			//PRINT DIFF
 			TIMSK1 = 0; //disable interrupts
@@ -57,5 +59,5 @@ int main(void)
 			TIMSK1 |= (1 << OCIE1A); // enable OCA interrupt
 			sampleCollected = 0;
 		}
-    }
+  }
 }
