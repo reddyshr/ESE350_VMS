@@ -1,9 +1,9 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-volatile int start;
-volatile int end; 
-volatile int diff;
+volatile unsigned int start;
+volatile unsigned int end; 
+volatile unsigned int diff;
 volatile int sampleCollected;
 
 
@@ -13,7 +13,6 @@ void init_oc_timer1() {
 	TCCR1A |= (1 << COM1A1);   //clear PB1/OC1A on output compare
 	TIMSK1 |= (1 << OCIE1A);   //enable OCA interrupt
 	TCCR1B |= (1 << CS10);     //no prescaler/start timer
-	//OCR1A   = 0x07;            //set OC register to 7 -> 5 us
 	OCR1A = TCNT1 + 79;        //79 cycles = 5us, trigger in 5 us
 }
 
@@ -25,15 +24,20 @@ void init_ic_timer1() {
 }
 
 ISR(TIMER1_CAPT_vect) {
-	if ((TCCR1B & (1 << ICES1)) == 1) { //trigger is rising edge
-		start = ICR1; //rising edge input capture value
-		TCCR1B &= ~(1 << ICES1)// trigger is falling edge
-	} else {
-		end = ICR1; //falling edge input capture value
-		diff = start - end;
+	//trigger is rising edge
+	if (((TCCR1B & (1 << ICES1)) >> ICES1) == 1) {
+		start   = ICR1;           //rising edge input capture value
+		TCCR1B &= ~(1 << ICES1)   //set trigger to falling edge
+		TIFR1  |= 0x20;           //clear the input capture flag
+	}
+  //trigger is falling edge
+	else {
+		end = ICR1;               //falling edge input capture value       
+		diff = end - start;       //calculate pulse width  
 		sampleCollected = 1;
 	}
 }
+
 ISR(TIMER1_COMPA_vect) {
 	DDRB &= ~(1 << PB1);       //Set PB1 to input
 	init_ic_timer1();          //set timer1 for input capture
@@ -41,23 +45,23 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 
-int main(void)
-{
+int main(void) {
 	DDRB  |= (1 << PB1);      //PB1 is output
 	PORTB |= (1 << PORTB1);   //Set PB1 to high
+	sampleCollected = 0;
 	init_oc_timer1();
 	sei();
 	
-  while(1)
-  {    
+  while(1) {
 		if (sampleCollected) {
 			//PRINT DIFF
-			TIMSK1 = 0; //disable interrupts
-			DDRB |= (1 << PB1); //PB1 is output
-			PORTB |= (1 << PORTB1); //Set PB1 to high
-			TCNT1 = 0; // clear timer count
-			TIMSK1 |= (1 << OCIE1A); // enable OCA interrupt
+			TIMSK1  = 0;             //disable interrupts
+			DDRB   |= (1 << PB1);    //PB1 is output
+			PORTB  |= (1 << PORTB1); //Set PB1 to high
+			TCNT1   = 0;             //clear timer count
+			TIMSK1 |= (1 << OCIE1A); //enable OCA interrupt
 			sampleCollected = 0;
+			printf("Pulse width: %u\n", diff);
 		}
   }
 }
