@@ -1,5 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdio.h>
+#include "uart.h"
 
 volatile unsigned int start;
 volatile unsigned int end; 
