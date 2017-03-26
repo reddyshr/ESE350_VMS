@@ -3,43 +3,42 @@
 #include <stdio.h>
 #include "uart.h"
 
-const unsigned int TIMER = 2000000; //prescaler is 8
+const uint32_t TIMER = 2000000; //prescaler is 8
 
 volatile int row_to_check;
-volatile int row_delay;
-volatile int col_delay;
+volatile unsigned int row_delay;
+volatile unsigned int col_delay;
 
 void toggle_on_tone() {
-	printf("toggled on\n");
 	//toggle compare match for OC1A (pin9) and OC1B (pin10)
 	TCCR1A |= (1 << COM1A0) | (1 << COM1B0);
 	//enable TIMER1 with prescaler 8
 	TCCR1B |= (1 << CS11); 
 	//enable OCA, OCB interrupts
-	TIMSK1 |= 0x06;	
+	TIMSK1 |= (1 << 2) | (1 << 1);	
 	TCNT1 = 0;
 	OCR1A = TCNT1 + row_delay;
 	OCR1B = TCNT1 + col_delay;	
 }
 
 void toggle_off_tone() {
-	printf("toggled off\n");
 	TCCR1B = 0;            //turn clock off
-	TCCR1A &= ~(1 << 4);   //toggle off compare match OC1A
-	TCCR1A &= ~(1 << 6);   //toggle off compare match OC1B
+	TCCR1A &= ~(1 << COM1A0);   //toggle off compare match OC1A
+	TCCR1A &= ~(1 << COM1B0);   //toggle off compare match OC1B
 	TIMSK1 &= ~(1 << 1);   //disable OCA interrupt
 	TIMSK1 &= ~(1 << 2);   //disable OCB interrupt
+	OCR1A = 0;
+	OCR1B = 0;
 }
 
 void decode() {
-	if (row_to_check == 4) {
+if (row_to_check == 4) {
 		PORTC &= ~(1 << PC2);
 		PORTC |= (1 << PC3) | (1 << PC4) | (1 << PC5);
 		if (((PIND & (1 << PD2)) >> PD2) == 0) {
 			//column 1, number 1, PB1 = 697Hz, PB2 = 1209Hz
 			row_delay = (TIMER / 697) / 2;
 			col_delay = (TIMER / 1209) / 2;
-			printf("key 1\n");
 			toggle_on_tone();
 			while(((PIND & (1 << PD2)) >> PD2) == 0);
 			toggle_off_tone();
@@ -70,7 +69,6 @@ void decode() {
 		}
 		else {
 		}
-		row_to_check = 3;
 	}
 	else if (row_to_check == 3) {
 		PORTC &= ~(1 << PC3);
@@ -109,7 +107,6 @@ void decode() {
 		}
 		else {
 		}
-		row_to_check = 2;
 	}
 	else if (row_to_check == 2) {
 		PORTC &= ~(1 << PC4);
@@ -148,9 +145,8 @@ void decode() {
 		}
 		else {
 		}
-		row_to_check = 1;
 	}
-	else {
+	else if (row_to_check == 1) {
 		PORTC &= ~(1 << PC5);
 		PORTC |= (1 << PC2) | (1 << PC3) | (1 << PC4);
 		if (((PIND & (1 << PD2)) >> PD2) == 0) {
@@ -187,24 +183,35 @@ void decode() {
 		}
 		else {
 		}
-		row_to_check = 4;
+	}
+	else {
 	}
 }
 
-//overflows every 4ms
+//overflows every 4ms, changes row to check
 ISR(TIMER2_OVF_vect) {
-	decode();
+	if (row_to_check == 4) {
+		row_to_check = 3;
+	}
+	else if (row_to_check == 3) {
+		row_to_check = 2;
+	}
+	else if (row_to_check == 2) {
+		row_to_check = 1;
+	}
+	else if (row_to_check == 1) {
+		row_to_check = 4;
+	}
+	else { printf("ERROR: invalid row\n"); }
 }
 
 //set row frequency
 ISR(TIMER1_COMPA_vect) {
-	printf("delay a\n");
 	OCR1A += row_delay;
 }
 
 //set col frequency
 ISR(TIMER1_COMPB_vect) {
-	printf("delay b\n");
 	OCR1B += col_delay;
 }
 
@@ -219,11 +226,13 @@ int main() {
 	DDRB |= (1 << PB1) | (1 << PB2);   
 	row_to_check = 4;
 	//enable overflow interrupt
-	TIMSK2 |= 0x01;
+	TIMSK2 |= (1 << TOIE2);
 	//enable timer2, prescaler 256
-	TCCR2B |= (1 << 2) | (1 << 1); 
+	TCCR2B |= (1 << CS22) | (1 << CS21); 
 
 	sei();
 
-	while(1);
+	while(1) {
+		decode();
+	}
 }
