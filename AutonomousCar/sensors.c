@@ -7,64 +7,84 @@ const int triggerPulseHi = 2;
 const int triggerPulseLo = 14999;
 
 //BOOLEANS TO DETERMINE WHEN SAMPLES ARE READY
-volatile int sensor1_read;
-volatile int sensor2_read;
-volatile int sensor3_read;
-volatile int sensor4_read;
-volatile int sensor5_read;
+volatile int s1_ready;
+volatile int s2_ready;
+volatile int s3_ready;
+volatile int s4_ready;
+volatile int s5_ready;
+
+//BOOLEANS TO DETERMINE IF SAMPEL HAS BEEN TAKEN
+volatile int s1_reading;
+volatile int s2_reading;
+volatile int s3_reading;
+volatile int s4_reading;
+volatile int s5_reading;
 
 //RISING EDGE TIMES
-volatile int sensor1_start;
-volatile int sensor2_start;
-volatile int sensor3_start;
-volatile int sensor4_start;
-volatile int sensor5_start;
+volatile int s1_start;
+volatile int s2_start;
+volatile int s3_start;
+volatile int s4_start;
+volatile int s5_start;
 
 //FALLING EDGE TIMES
-volatile int sensor1_end;
-volatile int sensor2_end;
-volatile int sensor3_end;
-volatile int sensor4_end;
-volatile int sensor5_end;
+volatile int s1_end;
+volatile int s2_end;
+volatile int s3_end;
+volatile int s4_end;
+volatile int s5_end;
 
 //PULSE WIDTHS
-volatile int sensor1_pulse;
-volatile int sensor2_pulse;
-volatile int sensor3_pulse;
-volatile int sensor4_pulse;
-volatile int sensor5_pulse;
+volatile int s1_pulse;
+volatile int s2_pulse;
+volatile int s3_pulse;
+volatile int s4_pulse;
+volatile int s5_pulse;
 
 //DELAY FOR TRIGGER PULSE
 volatile int delay;
 
-//PD7(Pin7) - SENSOR #
-//PD6(Pin6) - SENSOR #
-//PD5(Pin5) - SENSOR #
-//PD4(Pin4) - SENSOR #
-//PD3(Pin3) - SENSOR #
+//PD7(Pin7) - SENSOR #1
+//PD6(Pin6) - SENSOR #2
+//PD5(Pin5) - SENSOR #3
+//PD4(Pin4) - SENSOR #4
+//PD3(Pin3) - SENSOR #5
 //PB1(Pin9) - TRIGGER PULSE
 
-void init_variables() {
-	sensor1_read = 0;
-	sensor2_read = 0;
-	sensor3_read = 0;
-	sensor4_read = 0;
-	sensor5_read = 0;
-	sensor1_start = 0;
-  sensor2_start = 0;
-  sensor3_start = 0;
-  sensor4_start = 0;
-  sensor5_start = 0;
-  sensor1_end = 0;
-  sensor2_end = 0;
-  sensor3_end = 0;
-  sensor4_end = 0;
-  sensor5_end = 0;
-  sensor1_pulse = 0;
-  sensor2_pulse = 0;
-  sensor3_pulse = 0;
-  sensor4_pulse = 0;
-  sensor5_pulse = 0;
+void print_variables() {
+	printf("Sensor 1: start %u, end %u, pulse width %u\n", s1_start, s1_end, s1_pulse);
+	printf("Sensor 2: start %u, end %u, pulse width %u\n", s2_start, s2_end, s2_pulse);
+	printf("Sensor 3: start %u, end %u, pulse width %u\n", s3_start, s3_end, s3_pulse);
+	printf("Sensor 4: start %u, end %u, pulse width %u\n", s4_start, s4_end, s4_pulse);
+	printf("Sensor 5: start %u, end %u, pulse width %u\n", s5_start, s5_end, s5_pulse);
+}
+
+void reset_variables() {
+	s1_ready = 0;
+	s2_ready = 0;
+	s3_ready = 0;
+	s4_ready = 0;
+	s5_ready = 0;
+	s1_start = 0;
+  s2_start = 0;
+  s3_start = 0;
+  s4_start = 0;
+  s5_start = 0;
+  s1_end = 0;
+  s2_end = 0;
+  s3_end = 0;
+  s4_end = 0;
+  s5_end = 0;
+  s1_pulse = 0;
+  s2_pulse = 0;
+  s3_pulse = 0;
+  s4_pulse = 0;
+  s5_pulse = 0;
+  s1_reading = 0;
+  s2_reading = 0;
+  s3_reading = 0;
+  s4_reading = 0;
+  s5_reading = 0;
 }
 
 
@@ -101,12 +121,75 @@ int main() {
 	DDRD  &= ~(1 << PD3);   //set PD3(Pin3) as input
 	PORTB = (1 << PORTB1);  //set PB1(Pin9) high
 	sei();
-	init_variables();
+	reset_variables();
 	init_timer1();
 
   while(1) {
   	//check for input from sensors continously
-  	
+  	/*if ((s1_ready == 1) && (s2_ready == 1) && (s3_ready == 1) && (s4_ready == 1) && (s5_ready == 1)) {
+  		//sensor readings are complete
+  		print_variables();
+  		//reset_variables();
+  		break;
+  	}
+  	else if ((((PIND & (1 << PIND7)) >> PIND7) == 1) && s1_reading == 0  && s1_ready == 0) {
+  		//sensor 1 rising edge
+  		s1_start = TCNT1;
+  		s1_reading = 1;
+  	}
+  	else if ((((PIND & (1 << PIND7)) >> PIND7) == 0) && s1_reading == 1 && s1_ready == 0) {
+  		//sensor 1 falling edge
+  		s1_end = TCNT1;
+  		s1_pulse = s1_end - s1_start;
+  		s1_ready = 1;
+  	}
+  	else if ((((PIND & (1 << PIND6)) >> PIND6) == 1) && s2_reading == 0  && s2_ready == 0) {
+  		//sensor 2 rising edge
+  		s2_start = TCNT1;
+  		s2_reading = 1;
+  	}
+  	else if ((((PIND & (1 << PIND6)) >> PIND6) == 0) && s2_reading == 1  && s2_ready == 0) {
+  		//sensor 2 falling edge
+  		s2_end = TCNT1;
+  		s2_pulse = s2_end - s2_start;
+  		s2_ready = 1;
+  	}
+  	else if ((((PIND & (1 << PIND5)) >> PIND5) == 1) && s2_reading == 0  && s2_ready == 0) {
+  		//sensor 3 rising edge
+  		s3_start = TCNT1;
+  		s3_reading = 1;
+  	}
+  	else if ((((PIND & (1 << PIND5)) >> PIND5) == 0) && s2_reading == 1  && s2_ready == 0) {
+  		//sensor 3 falling edge
+  		s3_end = TCNT1;
+  		s3_pulse = s3_end - s3_start;
+  		s3_ready = 1;
+  	}
+  	else if ((((PIND & (1 << PIND4)) >> PIND4) == 1) && s2_reading == 0  && s2_ready == 0) {
+  		//sensor 4 rising edge
+  		s4_start = TCNT1;
+  		s4_reading = 1;
+  	}
+  	else if ((((PIND & (1 << PIND4)) >> PIND4) == 0) && s2_reading == 1  && s2_ready == 0) {
+  		//sensor 4 falling edge
+  		s4_end = TCNT1;
+  		s4_pulse = s4_end - s4_start;
+  		s4_ready = 1;
+  	}
+  	else if ((((PIND & (1 << PIND3)) >> PIND3) == 1) && s2_reading == 0  && s2_ready == 0) {
+  		//sensor 5 rising edge
+  		s5_start = TCNT1;
+  		s5_reading = 1;
+  	}
+  	else if ((((PIND & (1 << PIND3)) >> PIND3) == 0) && s2_reading == 1  && s2_ready == 0) {
+  		//sensor 5 falling edge
+  		s5_end = TCNT1;
+  		s5_pulse = s5_end - s5_start;
+  		s5_ready = 1;
+  	}
+  	else {
+  		printf("reading...\n");
+  	}*/
   }
 
 	return 1;
