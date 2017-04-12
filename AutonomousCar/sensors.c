@@ -44,27 +44,24 @@ volatile int s5_pulse;
 //DELAY FOR TRIGGER PULSE
 volatile int delay;
 
-//PD7(Pin7) - SENSOR #1
-//PD6(Pin6) - SENSOR #2
-//PD5(Pin5) - SENSOR #3
-//PD4(Pin4) - SENSOR #4
-//PD3(Pin3) - SENSOR #5
-//PB1(Pin9) - TRIGGER PULSE
-
 int calculate_distance (int pulseWidth) {
+  int time_us = 4 * pulseWidth;        //pulsewidth in us 
+  int hit_time = time_us / 2;          //time until it hit in us
+  return (int) (hit_time * 0.034); 
 }
 
-void print_variables() {
-	printf("Sensor 1: start %u, end %u, pulse width %u\n", s1_start, s1_end, s1_pulse);
-	printf("Sensor 2: start %u, end %u, pulse width %u\n", s2_start, s2_end, s2_pulse);
-	printf("Sensor 3: start %u, end %u, pulse width %u\n", s3_start, s3_end, s3_pulse);
-	printf("Sensor 4: start %u, end %u, pulse width %u\n", s4_start, s4_end, s4_pulse);
-	printf("Sensor 5: start %u, end %u, pulse width %u\n", s5_start, s5_end, s5_pulse);
+void print_distance() {
+  int s1_dist = calculate_distance(s1_pulse);
+  int s2_dist = calculate_distance(s2_pulse);
+  int s3_dist = calculate_distance(s3_pulse);
+  int s4_dist = calculate_distance(s4_pulse);
+  int s5_dist = calculate_distance(s5_pulse);
+	printf("Sensor 1: %ucm, Sensor 2: %ucm, Sensor 3: %ucm, Sensor 4: %ucm, Sensor 5: %ucm\n", s1_dist, s2_dist, s3_dist, s4_dist, s5_dist);
 }
 
 void reset_variables() {
   s1_ready = 0;
-  s1_ready = 0;
+  s2_ready = 0;
   s3_ready = 0;
   s4_ready = 0;
   s5_ready = 0;
@@ -128,70 +125,66 @@ int main() {
 	reset_variables();
 	init_timer1();
 
-  while(1) {
-  	if (delay == triggerPulseLo) {
-      //check for input from sensors continously
-      if (s1_ready == 1 && s2_ready == 1 && s3_ready == 1) {
-        print_variables();
-        break;
-      }
-      if ((((PIND & (1 << PIND7)) >> PIND7) == 1) && s1_reading == 0 && s1_ready == 0) {
-      //sensor 1 rising edge
-        s1_start = TCNT1;
-        s1_reading = 1;
-      }
-      if ((((PIND & (1 << PIND7)) >> PIND7) == 0) && s1_reading == 1 && s1_ready == 0) {
-      //sensor 1 falling edge
-        s1_end = TCNT1;
-        s1_pulse = s1_end - s1_start;
-        s1_ready = 1;
-      }  
-      if ((((PIND & (1 << PIND6)) >> PIND6) == 1) && s2_reading == 0 && s2_ready == 0) {
-      //sensor 2 rising edge
-        s2_start = TCNT1;
-        s2_reading = 1;
-      }
-      if ((((PIND & (1 << PIND6)) >> PIND6) == 0) && s2_reading == 1 && s2_ready == 0) {
-      //sensor 2 falling edge
-        s2_end = TCNT1;
-        s2_pulse = s2_end - s2_start;
-        s2_ready = 1;
-      }
-      if ((((PIND & (1 << PIND5)) >> PIND5) == 1) && s3_reading == 0 && s3_ready == 0) {
-      //sensor 3 rising edge
-        s3_start = TCNT1;
-        s3_reading = 1;
-      }
-      if ((((PIND & (1 << PIND5)) >> PIND5) == 0) && s3_reading == 1 && s3_ready == 0) {
-      //sensor 3 falling edge
-        s3_end = TCNT1;
-        s3_pulse = s3_end - s3_start;
-        s3_ready = 1;
-      }
-      if ((((PIND & (1 << PIND4)) >> PIND4) == 1) && s4_reading == 0 && s4_ready == 0) {
-      //sensor 4 rising edge
-        s4_start = TCNT1;
-        s4_reading = 1;
-      }
-      if ((((PIND & (1 << PIND4)) >> PIND4) == 0) && s4_reading == 1 && s4_ready == 0) {
-      //sensor 4 falling edge
-        s4_end = TCNT1;
-        s4_pulse = s4_end - s4_start;
-        s4_ready = 1;
-      }
-      if ((((PIND & (1 << PIND3)) >> PIND3) == 1) && s5_reading == 0 && s5_ready == 0) {
-      //sensor 5 rising edge
-        s5_start = TCNT1;
-        s5_reading = 1;
-      }
-      if ((((PIND & (1 << PIND3)) >> PIND3) == 0) && s5_reading == 1 && s5_ready == 0) {
-      //sensor 5 falling edge
-        s5_end = TCNT1;
-        s5_pulse = s5_end - s5_start;
-        s5_ready = 1;
-      }
+  while(1) {	
+    if (s1_ready == 1 && s2_ready == 1 && s3_ready == 1 && s4_ready && s5_ready) {
+      print_distance();
+      reset_variables();
     }
-    
+    if ((((PIND & (1 << PIND7)) >> PIND7) == 1) && s1_reading == 0 && s1_ready == 0) {
+      //sensor 1 rising edge
+      s1_start = TCNT1;
+      s1_reading = 1;
+    }
+    if ((((PIND & (1 << PIND7)) >> PIND7) == 0) && s1_reading == 1 && s1_ready == 0) {
+      //sensor 1 falling edge
+      s1_end = TCNT1;
+      s1_pulse = s1_end - s1_start;
+      s1_ready = 1;
+    }  
+    if ((((PIND & (1 << PIND6)) >> PIND6) == 1) && s2_reading == 0 && s2_ready == 0) {
+      //sensor 2 rising edge
+      s2_start = TCNT1;
+      s2_reading = 1;
+    }
+    if ((((PIND & (1 << PIND6)) >> PIND6) == 0) && s2_reading == 1 && s2_ready == 0) {
+      //sensor 2 falling edge
+      s2_end = TCNT1;
+      s2_pulse = s2_end - s2_start;
+      s2_ready = 1;
+    }
+    if ((((PIND & (1 << PIND5)) >> PIND5) == 1) && s3_reading == 0 && s3_ready == 0) {
+      //sensor 3 rising edge
+      s3_start = TCNT1;
+      s3_reading = 1;
+    }
+    if ((((PIND & (1 << PIND5)) >> PIND5) == 0) && s3_reading == 1 && s3_ready == 0) {
+      //sensor 3 falling edge
+      s3_end = TCNT1;
+      s3_pulse = s3_end - s3_start;
+      s3_ready = 1;
+    }
+    if ((((PIND & (1 << PIND4)) >> PIND4) == 1) && s4_reading == 0 && s4_ready == 0) {
+      //sensor 4 rising edge
+      s4_start = TCNT1;
+      s4_reading = 1;
+    }
+    if ((((PIND & (1 << PIND4)) >> PIND4) == 0) && s4_reading == 1 && s4_ready == 0) {
+      //sensor 4 falling edge
+      s4_end = TCNT1;
+      s4_pulse = s4_end - s4_start;
+      s4_ready = 1;
+    }
+    if ((((PIND & (1 << PIND3)) >> PIND3) == 1) && s5_reading == 0 && s5_ready == 0) {
+      //sensor 5 rising edge
+      s5_start = TCNT1;
+      s5_reading = 1;
+    }
+    if ((((PIND & (1 << PIND3)) >> PIND3) == 0) && s5_reading == 1 && s5_ready == 0) {
+      //sensor 5 falling edge
+      s5_end = TCNT1;
+      s5_pulse = s5_end - s5_start;
+      s5_ready = 1;
+    }  
   }
 	return 1;
 }
