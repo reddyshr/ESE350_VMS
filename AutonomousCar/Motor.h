@@ -16,6 +16,7 @@ class Motor {
 	void rotateCCW(double speed);
 	void stop();
 	Motor(int clockwisePin, int counterclockwisePin);
+	Motor();
 	private:
 	int cwPin;
 	int ccwPin;

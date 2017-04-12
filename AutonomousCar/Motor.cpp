@@ -11,16 +11,17 @@
 #include <stdio.h>
 
 void init_timer0() {
-	TCCR0A |= (1 << COM0A1) | (1 << COM0B1) | (1 << COM0A0) | (1 << COM0B0); //set on BOTTOM, clear on compare match
+	TCCR0A |= (1 << COM0A1) | (1 << COM0B1); //set on BOTTOM, clear on compare match | (1 << COM0A0) | (1 << COM0B0)
 	TCCR0A |= (1 << WGM01) | (1 << WGM00); //mode 3 pwm, top is max
 	TCCR0B |= (1 << CS00); //no prescaler
 }
 
 void init_timer2() {
-	TCCR2A |= (1 << COM2A1) | (1 << COM2B1) | (1 << COM2A0) | (1 << COM2B0); //set on BOTTOM, clear on compare match
+	TCCR2A |= (1 << COM2A1) | (1 << COM2B1); //set on BOTTOM, clear on compare match | (1 << COM2A0) | (1 << COM2B0)
 	TCCR2A |= (1 << WGM21) | (1 << WGM20); //mode 3 pwm, top is max
 	TCCR2B |= (1 << CS20); //no prescaler
 }
+
 
 Motor::Motor(int clockwisePin, int counterclockwisePin) {
 	cwPin = clockwisePin;
