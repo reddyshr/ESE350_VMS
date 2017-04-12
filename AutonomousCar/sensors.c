@@ -56,6 +56,22 @@ void print_distance() {
   int s3_dist = calculate_distance(s3_pulse);
   int s4_dist = calculate_distance(s4_pulse);
   int s5_dist = calculate_distance(s5_pulse);
+  //max distance that sensor can read is 400cm
+  if (s1_dist > 400) {
+    s1_dist = 400;
+  }
+  if (s2_dist > 400) {
+    s2_dist = 400;
+  }
+  if (s3_dist > 400) {
+    s3_dist = 400;
+  }
+  if (s4_dist > 400) {
+    s4_dist = 400;
+  }
+  if (s5_dist > 400) {
+    s5_dist = 400;
+  }
 	printf("Sensor 1: %ucm, Sensor 2: %ucm, Sensor 3: %ucm, Sensor 4: %ucm, Sensor 5: %ucm\n", s1_dist, s2_dist, s3_dist, s4_dist, s5_dist);
 }
 
