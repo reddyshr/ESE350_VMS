@@ -1,6 +1,6 @@
 name = output
 device = /dev/tty.usbmodem1411
-src = singlesensor.c
+src = sensors.c
 flags = -std=c11 -Os
 baud = 9600
 
