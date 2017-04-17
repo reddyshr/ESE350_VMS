@@ -68,40 +68,48 @@ void setup() {
   Serial.begin(9600);
   initSensors();
   Wire.begin();
-  Serial.println("asdf");
   oldDist[0] = 0;
   oldDist[1] = 0;
   oldDist[2] = 0;
   oldDist[3] = 0;
   oldDist[4] = 0;
+  currDist[0] = 0;
+  currDist[1] = 0;
+  currDist[2] = 0;
+  currDist[3] = 0;
+  currDist[4] = 0;
 }
 
 void loop() {
-  Wire.requestFrom(8, 5);  
+  int i = 0;
+  while (i < 3) {
+    Wire.requestFrom(8, 5);
+    if (Wire.available()) {
+      currDist[0] = currDist[0] + Wire.read();
+      currDist[1] = currDist[1] + Wire.read();
+      currDist[2] = currDist[2] + Wire.read();
+      currDist[3] = currDist[3] + Wire.read();
+      currDist[4] = currDist[4] + Wire.read(); 
+    }
+    i++;
+  }
+  currDist[0] = currDist[0] / 3;
+  currDist[1] = currDist[1] / 3;
+  currDist[2] = currDist[2] / 3; 
+  currDist[3] = currDist[3] / 3;
+  currDist[4] = currDist[4] / 3; 
+  /*Wire.requestFrom(8, 5);  
   while (Wire.available()) {
     currDist[0] = Wire.read();
     currDist[1] = Wire.read();
     currDist[2] = Wire.read();
     currDist[3] = Wire.read();
     currDist[4] = Wire.read();
-  }
-  //car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1, dof, mag);
-  if (currDist[2] <= 20) {
+  }*/
+  if (currDist[0] <= 20 || currDist[1] <= 20 || currDist[2] <= 20) {
     //REACH A WALL OR DEAD END
-    //dead_end();
-    while (currDist[2] <= 20) {
-      Wire.requestFrom(8, 5);
-      currDist[0] = Wire.read();
-      currDist[1] = Wire.read();
-      currDist[2] = Wire.read();
-      currDist[3] = Wire.read();
-      currDist[4] = Wire.read();
-      car.turnLeft(10, dof, mag);
-      delay(50);
-    }
-    /*car.turnLeft(90, dof, mag);
-    delay(100);
-    car.turnLeft(90, dof, mag);*/
+    //dead_end();  
+    car.turnLeft(90, dof, mag);
   }
   else {
     car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1, dof, mag);
