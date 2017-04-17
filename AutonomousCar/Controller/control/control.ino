@@ -47,7 +47,7 @@ void loop() {
     currRightDist = Wire.read();
     frontDist = Wire.read();
   }
- // car.forward(currLeftDist, currRightDist, oldLeftDist, oldRightDist, 0.1, dof, mag);
+  car.forward(currLeftDist, currRightDist, oldLeftDist, oldRightDist, 0.1, dof, mag);
   oldLeftDist = currLeftDist;
   oldRightDist = currRightDist;
   delay(50);
