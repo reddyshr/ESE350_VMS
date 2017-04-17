@@ -109,10 +109,12 @@ void Car::turnLeft(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified m
     targetHeading = initHeading - angle;
   }
   tolerance = 3.0;
-  turnSpeed = 55;
+  turnSpeed = 65;
   leftMotor.rotateCCW(turnSpeed);
   rightMotor.rotateCCW(turnSpeed);
-  
+      Serial.print("TARGET: ");
+    Serial.println(targetHeading);
+  error = targetHeading - currHeading;
   while(abs(error) > tolerance) {
     mag.getEvent(&mag_event);
     if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
@@ -120,7 +122,7 @@ void Car::turnLeft(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified m
     }
     
     error = targetHeading - currHeading; 
-    Serial.println(error);
+    //Serial.println(error);
   }
   Serial.println("DONE");
   leftMotor.stop();
@@ -129,6 +131,7 @@ void Car::turnLeft(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified m
 
 void Car::turnRight(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag) {
   float initHeading;
+  float heading;
   float currHeading;
   float targetHeading;
   float error;
@@ -136,32 +139,42 @@ void Car::turnRight(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified 
   int turnSpeed;
   sensors_event_t mag_event;
   sensors_vec_t   orientation;
+  int numOfSamples = 20;
   
-  mag.getEvent(&mag_event);
-  if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-    initHeading = orientation.heading;
-    Serial.print("INIT: ");
-    Serial.println(initHeading);
+  int i = 0;
+  initHeading = 0;
+  while (i < numOfSamples) {
+     mag.getEvent(&mag_event);
+     if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
+         initHeading = initHeading + orientation.heading;
+     }
+     i++;
   }
+  initHeading = initHeading / numOfSamples;
 
   if (angle > (360 - initHeading)) {
     targetHeading = angle - (360 - initHeading);
   } else {
     targetHeading = initHeading + angle;
   }
-  tolerance = 3.0;
+  tolerance = 2.0;
   turnSpeed = 55;
   leftMotor.rotateCW(turnSpeed);
   rightMotor.rotateCW(turnSpeed);
-  
+  currHeading = 0;
+  error = targetHeading - currHeading;
   while(abs(error) > tolerance) {
-    mag.getEvent(&mag_event);
-    if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-      currHeading = orientation.heading;
+    int j = 0;
+    while (j < 10) {
+      mag.getEvent(&mag_event);
+      if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
+        currHeading = currHeading + orientation.heading;
+      }
     }
+
+    currHeading = currHeading / 10;
     
     error = targetHeading - currHeading; 
-    Serial.println(error);
   }
   Serial.println("DONE");
   leftMotor.stop();

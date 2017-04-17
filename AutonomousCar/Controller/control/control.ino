@@ -21,7 +21,8 @@ int oldRightDist = 0;
 int currLeftDist;
 int currRightDist;
 int frontDist;
-
+int oldDist[5];
+int currDist[5];
 void initSensors()
 {
   if(!mag.begin())
@@ -32,23 +33,84 @@ void initSensors()
   }
 }
 
+void dead_end() {
+  if (currDist[0] >= 20 && currDist[1] >= 20 && currDist[3] >= 20 && currDist[4] >= 20) {
+    //OPEN LEFT AND RIGHT TURNS
+    randomSeed(currDist[2]);  //initialize to get pseudo-random number
+    long rand = random(200);    //print random number from 0 to 200
+    if (rand < 100L) {
+      //MAKE LEFT TURN
+      while(currDist[2] <= 20) {
+        //TURN LEFT ONE DEGREE
+      }
+    }
+    else {
+      //MAKE RIGHT TURN
+      while (currDist[2] <= 20)  {
+        //TURN RIGHT ONE DEGREE
+      }
+    }
+  }
+  else if (currDist[0] >= 20 && currDist[1] >= 20) {
+    //OPEN LEFT TURN
+  }
+  else if (currDist[4] >= 20 && currDist[3] >= 20) {
+    //OPEN RIGHT TURN
+  }
+  else {
+    //DEAD END, TURN AROUND 180 DEGREES
+    car.turnLeft(180, dof, mag);
+  }
+}
+
 
 void setup() {
   Serial.begin(9600);
   initSensors();
   Wire.begin();
   Serial.println("asdf");
+  oldDist[0] = 0;
+  oldDist[1] = 0;
+  oldDist[2] = 0;
+  oldDist[3] = 0;
+  oldDist[4] = 0;
 }
 
 void loop() {
-  Wire.requestFrom(8, 3);    // request 6 bytes from slave device #8
-  while (Wire.available()) { // slave may send less than requested
-    currLeftDist = Wire.read(); // receive a byte as character
-    currRightDist = Wire.read();
-    frontDist = Wire.read();
+  Wire.requestFrom(8, 5);  
+  while (Wire.available()) {
+    currDist[0] = Wire.read();
+    currDist[1] = Wire.read();
+    currDist[2] = Wire.read();
+    currDist[3] = Wire.read();
+    currDist[4] = Wire.read();
   }
-  car.forward(currLeftDist, currRightDist, oldLeftDist, oldRightDist, 0.1, dof, mag);
-  oldLeftDist = currLeftDist;
-  oldRightDist = currRightDist;
+  //car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1, dof, mag);
+  if (currDist[2] <= 20) {
+    //REACH A WALL OR DEAD END
+    //dead_end();
+    while (currDist[2] <= 20) {
+      Wire.requestFrom(8, 5);
+      currDist[0] = Wire.read();
+      currDist[1] = Wire.read();
+      currDist[2] = Wire.read();
+      currDist[3] = Wire.read();
+      currDist[4] = Wire.read();
+      car.turnLeft(10, dof, mag);
+      delay(50);
+    }
+    /*car.turnLeft(90, dof, mag);
+    delay(100);
+    car.turnLeft(90, dof, mag);*/
+  }
+  else {
+    car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1, dof, mag);
+  }
+  //COPY DISTANCE READINGS FOR NEXT ITERATION
+  oldDist[0] = currDist[0];
+  oldDist[1] = currDist[1];
+  oldDist[2] = currDist[2];
+  oldDist[3] = currDist[3];
+  oldDist[4] = currDist[4];
   delay(50);
 }
