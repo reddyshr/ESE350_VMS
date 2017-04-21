@@ -60,7 +60,7 @@ void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, floa
 
   leftMotor.rotateCCW(leftSpeed);
   rightMotor.rotateCW(rightSpeed); 
-  Serial.print("KP:  ");
+  /*Serial.print("KP:  ");
   Serial.print(kp);
   Serial.print("   ");
   Serial.print("KD:  ");
@@ -77,7 +77,7 @@ void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, floa
   Serial.print("   ");
   Serial.print("rightSpeed:  ");
   Serial.print(rightSpeed);
-  Serial.println("   ");
+  Serial.println("   ");*/
 	
 }
 
@@ -108,7 +108,7 @@ void Car::turnLeft(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified m
   } else {
     targetHeading = initHeading - angle;
   }
-  tolerance = 3.0;
+  tolerance = 8.0;
   turnSpeed = 65;
   leftMotor.rotateCCW(turnSpeed);
   rightMotor.rotateCCW(turnSpeed);
@@ -139,41 +139,28 @@ void Car::turnRight(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified 
   int turnSpeed;
   sensors_event_t mag_event;
   sensors_vec_t   orientation;
-  int numOfSamples = 20;
-  
-  int i = 0;
-  initHeading = 0;
-  while (i < numOfSamples) {
-     mag.getEvent(&mag_event);
-     if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-         initHeading = initHeading + orientation.heading;
-     }
-     i++;
+
+  mag.getEvent(&mag_event);
+  if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
+     initHeading = orientation.heading;
   }
-  initHeading = initHeading / numOfSamples;
 
   if (angle > (360 - initHeading)) {
     targetHeading = angle - (360 - initHeading);
   } else {
     targetHeading = initHeading + angle;
   }
-  tolerance = 2.0;
+  tolerance = 8.0;
   turnSpeed = 55;
   leftMotor.rotateCW(turnSpeed);
   rightMotor.rotateCW(turnSpeed);
   currHeading = 0;
   error = targetHeading - currHeading;
   while(abs(error) > tolerance) {
-    int j = 0;
-    while (j < 10) {
-      mag.getEvent(&mag_event);
-      if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-        currHeading = currHeading + orientation.heading;
-      }
-    }
-
-    currHeading = currHeading / 10;
-    
+    mag.getEvent(&mag_event);
+    if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
+       currHeading = orientation.heading;
+    }   
     error = targetHeading - currHeading; 
   }
   Serial.println("DONE");

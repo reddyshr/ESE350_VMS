@@ -16,13 +16,14 @@ Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified   mag   = Adafruit_LSM303_Mag_Unified(30302);
 bool cont;
 Car car(5, 6, 11, 3);
-int oldLeftDist = 0;
-int oldRightDist = 0;
-int currLeftDist;
-int currRightDist;
-int frontDist;
+//int oldLeftDist = 0;
+//int oldRightDist = 0;
+//int currLeftDist;
+//int currRightDist;
+//int frontDist;
 int oldDist[5];
 int currDist[5];
+
 void initSensors()
 {
   if(!mag.begin())
@@ -33,33 +34,44 @@ void initSensors()
   }
 }
 
+void getAverageReadings() {
+  int i = 0;
+  while (i < 3) {
+    Wire.requestFrom(8, 5);
+    if (Wire.available()) {
+      currDist[0] = currDist[0] + Wire.read();
+      currDist[1] = currDist[1] + Wire.read();
+      currDist[2] = currDist[2] + Wire.read();
+      currDist[3] = currDist[3] + Wire.read();
+      currDist[4] = currDist[4] + Wire.read(); 
+    }
+    i++;
+  }
+  currDist[0] = currDist[0] / 3;
+  currDist[1] = currDist[1] / 3;
+  currDist[2] = currDist[2] / 3; 
+  currDist[3] = currDist[3] / 3;
+  currDist[4] = currDist[4] / 3; 
+
+  Serial.print("s1: ");
+  Serial.print(currDist[0]);
+  Serial.print(" s2: ");
+  Serial.print(currDist[1]);
+  Serial.print(" s3: ");
+  Serial.print(currDist[2]);
+  Serial.print(" s4: ");
+  Serial.print(currDist[3]);
+  Serial.print(" s5: ");
+  Serial.println(currDist[4]);
+}
+
 void dead_end() {
-  if (currDist[0] >= 20 && currDist[1] >= 20 && currDist[3] >= 20 && currDist[4] >= 20) {
-    //OPEN LEFT AND RIGHT TURNS
-    randomSeed(currDist[2]);  //initialize to get pseudo-random number
-    long rand = random(200);    //print random number from 0 to 200
-    if (rand < 100L) {
-      //MAKE LEFT TURN
-      while(currDist[2] <= 20) {
-        //TURN LEFT ONE DEGREE
-      }
+  if (currDist[1] <= 20 && currDist[2] <= 20 && currDist[3] <= 20) {
+    //need to turn around
+    while (currDist[2] < 50) {
+      car.turnLeft(20, dof, mag);
+      getAverageReadings();
     }
-    else {
-      //MAKE RIGHT TURN
-      while (currDist[2] <= 20)  {
-        //TURN RIGHT ONE DEGREE
-      }
-    }
-  }
-  else if (currDist[0] >= 20 && currDist[1] >= 20) {
-    //OPEN LEFT TURN
-  }
-  else if (currDist[4] >= 20 && currDist[3] >= 20) {
-    //OPEN RIGHT TURN
-  }
-  else {
-    //DEAD END, TURN AROUND 180 DEGREES
-    car.turnLeft(180, dof, mag);
   }
 }
 
@@ -81,39 +93,15 @@ void setup() {
 }
 
 void loop() {
-  int i = 0;
-  while (i < 3) {
-    Wire.requestFrom(8, 5);
-    if (Wire.available()) {
-      currDist[0] = currDist[0] + Wire.read();
-      currDist[1] = currDist[1] + Wire.read();
-      currDist[2] = currDist[2] + Wire.read();
-      currDist[3] = currDist[3] + Wire.read();
-      currDist[4] = currDist[4] + Wire.read(); 
-    }
-    i++;
-  }
-  currDist[0] = currDist[0] / 3;
-  currDist[1] = currDist[1] / 3;
-  currDist[2] = currDist[2] / 3; 
-  currDist[3] = currDist[3] / 3;
-  currDist[4] = currDist[4] / 3; 
-  /*Wire.requestFrom(8, 5);  
-  while (Wire.available()) {
-    currDist[0] = Wire.read();
-    currDist[1] = Wire.read();
-    currDist[2] = Wire.read();
-    currDist[3] = Wire.read();
-    currDist[4] = Wire.read();
-  }*/
-  if (currDist[0] <= 20 || currDist[1] <= 20 || currDist[2] <= 20) {
-    //REACH A WALL OR DEAD END
-    //dead_end();  
-    car.turnLeft(90, dof, mag);
+  getAverageReadings();
+  if (currDist[2] <= 30 /*|| currDist[1] <= 20 || currDist[3] <= 20*/) {
+    car.brake();
+    dead_end();
   }
   else {
     car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1, dof, mag);
   }
+  
   //COPY DISTANCE READINGS FOR NEXT ITERATION
   oldDist[0] = currDist[0];
   oldDist[1] = currDist[1];
