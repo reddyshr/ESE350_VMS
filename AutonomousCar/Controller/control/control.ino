@@ -66,13 +66,17 @@ void getAverageReadings() {
 }
 
 void dead_end() {
-  if (currDist[1] <= 20 && currDist[2] <= 20 && currDist[3] <= 20) {
+  /*if (currDist[1] <= 20 && currDist[2] <= 20 && currDist[3] <= 20) {
     //need to turn around
     while (currDist[2] < 50) {
       car.turnLeft(20, dof, mag);
       getAverageReadings();
     }
-  }
+  }*/
+   while (currDist[2] < 60) {
+      car.turnLeft(20, dof, mag);
+      getAverageReadings();
+    }
 }
 
 
@@ -94,7 +98,7 @@ void setup() {
 
 void loop() {
   getAverageReadings();
-  if (currDist[2] <= 30 /*|| currDist[1] <= 20 || currDist[3] <= 20*/) {
+  if (currDist[2] <= 30 || currDist[1] <= 20 || currDist[3] <= 20) {
     car.brake();
     dead_end();
   }
