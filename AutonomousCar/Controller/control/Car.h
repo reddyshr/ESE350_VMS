@@ -23,16 +23,17 @@ class Car {
 	public:
   bool cont;
   int goSpeed;
-	void forward(int currLDist, int currRDist, int oldLDist, int oldRDist, float dt, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag);
-	void reverse(Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag);
-  void turnLeft(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag);
-  void turnRight(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag);
-  void calibrate(Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag);
+	void forward(int currLDist, int currRDist, int oldLDist, int oldRDist, float dt);
+	void reverse();
+  void turnLeft(float angle);
+  void turnRight(float angle);
 	void brake();
 	Car(int leftCWPin, int leftCCWPin, int rightCWPin, int rightCCWPin) : leftMotor(leftCWPin, leftCCWPin), rightMotor(rightCWPin, rightCCWPin){}
 	private:
 	Motor leftMotor;
 	Motor rightMotor;
+  int leftRotPin = 7;
+  int rightRotPin = 8;
 };
 
 

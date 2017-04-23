@@ -14,12 +14,15 @@ class Motor {
 	public:
 	void rotateCW(double speed);
 	void rotateCCW(double speed);
+  void rotateCWCount(int numOfSpokes);
+  void rotateCCWCount(int numOfSpokes);
 	void stop();
 	Motor(int clockwisePin, int counterclockwisePin);
 	Motor();
 	private:
 	int cwPin;
 	int ccwPin;
+
 	
 };
 

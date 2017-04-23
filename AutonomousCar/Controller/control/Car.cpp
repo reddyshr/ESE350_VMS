@@ -27,7 +27,7 @@
 //AS OF NOW, A BASE SPEED OF 60 WILL BE USED
 
 //YOU MAY NEED TO ADD DIFFERENT PID CONTROLLERS BASED ON SOURCE ERROR
-void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, float dt, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag) {
+void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, float dt) {
   //PID Control for if car is not in open space. Left and RIght DIstances are not big. 
   int baseSpeed = 60; 
   float kp = PID::getKP();
@@ -60,7 +60,7 @@ void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, floa
 
   leftMotor.rotateCCW(leftSpeed);
   rightMotor.rotateCW(rightSpeed); 
-  /*Serial.print("KP:  ");
+  Serial.print("KP:  ");
   Serial.print(kp);
   Serial.print("   ");
   Serial.print("KD:  ");
@@ -77,104 +77,115 @@ void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, floa
   Serial.print("   ");
   Serial.print("rightSpeed:  ");
   Serial.print(rightSpeed);
-  Serial.println("   ");*/
+  Serial.println("   ");
 	
 }
 
-void Car::reverse(Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified   mag) {
+void Car::reverse() {
 	//leftMotor.rotateCW(speed);
 	//rightMotor.rotateCCW(speed);
 }
 
-void Car::turnLeft(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag) {
-  float initHeading;
-  float currHeading;
-  float targetHeading;
-  float error;
-  float tolerance;
-  int turnSpeed;
-  sensors_event_t mag_event;
-  sensors_vec_t   orientation;
-  
-  mag.getEvent(&mag_event);
-  if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-    initHeading = orientation.heading;
-    Serial.print("INIT: ");
-    Serial.println(initHeading);
-  }
-
-  if (angle > initHeading) {
-    targetHeading = 360.0 - (angle - initHeading);
-  } else {
-    targetHeading = initHeading - angle;
-  }
-  tolerance = 8.0;
-  turnSpeed = 65;
-  leftMotor.rotateCCW(turnSpeed);
-  rightMotor.rotateCCW(turnSpeed);
-      Serial.print("TARGET: ");
-    Serial.println(targetHeading);
-  error = targetHeading - currHeading;
-  while(abs(error) > tolerance) {
-    mag.getEvent(&mag_event);
-    if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-      currHeading = orientation.heading;
-    }
-    
-    error = targetHeading - currHeading; 
-    //Serial.println(error);
-  }
-  Serial.println("DONE");
-  leftMotor.stop();
-  rightMotor.stop();
-}
-
-void Car::turnRight(float angle, Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag) {
-  float initHeading;
-  float heading;
-  float currHeading;
-  float targetHeading;
-  float error;
-  float tolerance;
-  int turnSpeed;
-  sensors_event_t mag_event;
-  sensors_vec_t   orientation;
-
-  mag.getEvent(&mag_event);
-  if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-     initHeading = orientation.heading;
-  }
-
-  if (angle > (360 - initHeading)) {
-    targetHeading = angle - (360 - initHeading);
-  } else {
-    targetHeading = initHeading + angle;
-  }
-  tolerance = 8.0;
-  turnSpeed = 55;
+void Car::turnLeft(float angle) {
+  float prop = angle / 360.0;
+  int num = (int) (prop * 57); //NEED TO CALCULATE NUM
+  int cntLeft = 0;
+  int prevSampleLeft;
+  int currSampleLeft;
+  int cntRight = 0;
+  int prevSampleRight;
+  int currSampleRight;
+  int turnSpeed = 55;
   leftMotor.rotateCW(turnSpeed);
   rightMotor.rotateCW(turnSpeed);
-  currHeading = 0;
-  error = targetHeading - currHeading;
-  while(abs(error) > tolerance) {
-    mag.getEvent(&mag_event);
-    if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation)) {
-       currHeading = orientation.heading;
-    }   
-    error = targetHeading - currHeading; 
-  }
-  Serial.println("DONE");
+
+
+    DDRD &= ~(1 << PD7);
+    DDRB &= ~(1 << PB0);
+    while ((cntRight < num)) {
+      if(PIND & (1 << PD7)) {
+        currSampleLeft = 1;
+      } else {
+        currSampleLeft = 0;
+      }
+      if(PINB & (1 << PB0)) {
+        currSampleRight = 1;
+      } else {
+        currSampleRight = 0;
+      }
+      
+      if (currSampleLeft == 1 && prevSampleLeft == 0) {
+        cntLeft++;
+      }
+      if (currSampleRight == 1 && prevSampleRight == 0) {
+        cntRight++;
+      }
+      
+      prevSampleLeft = currSampleLeft;
+      prevSampleRight = currSampleRight;
+
+      if (cntLeft >= num) {
+        leftMotor.stop();
+      }
+      if (cntRight >= num) {
+        leftMotor.stop();
+        rightMotor.stop();
+      }
+    }
+ 
   leftMotor.stop();
   rightMotor.stop();
 }
 
-void Car::calibrate(Adafruit_9DOF dof, Adafruit_LSM303_Mag_Unified mag) {
-  //FIND MOTOR SPEED TO USE
-  boolean done = false; 
-  while(!done) {
-    
-  }
-  
+void Car::turnRight(float angle) {
+  float prop = angle / 360.0;
+  int num = (int) (prop * 55);
+  int cntLeft = 0;
+  int prevSampleLeft;
+  int currSampleLeft;
+  int cntRight = 0;
+  int prevSampleRight;
+  int currSampleRight;
+  int turnSpeed = 55;
+  leftMotor.rotateCCW(turnSpeed);
+  rightMotor.rotateCCW(turnSpeed);
+
+
+    DDRD &= ~(1 << PD7);
+    DDRB &= ~(1 << PB0);
+    while ((cntLeft < num) ) {
+      if(PIND & (1 << PD7)) {
+        currSampleLeft = 1;
+      } else {
+        currSampleLeft = 0;
+      }
+      if(PINB & (1 << PB0)) {
+        currSampleRight = 1;
+      } else {
+        currSampleRight = 0;
+      }
+      
+      if (currSampleLeft == 1 && prevSampleLeft == 0) {
+        cntLeft++;
+      }
+      if (currSampleRight == 1 && prevSampleRight == 0) {
+        cntRight++;
+      }
+      
+      prevSampleLeft = currSampleLeft;
+      prevSampleRight = currSampleRight;
+
+      if (cntLeft >= num) {
+        leftMotor.stop();
+        rightMotor.stop();
+      }
+      if (cntRight >= num) {
+        rightMotor.stop();
+      }
+    }
+ 
+  leftMotor.stop();
+  rightMotor.stop();
 }
 
 void Car::brake() {

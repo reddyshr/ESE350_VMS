@@ -99,6 +99,7 @@ void Motor::rotateCCW(double speed) {
 	}
 }
 
+
 void Motor::stop() {
 	if ((cwPin == 5 && ccwPin == 6) || (cwPin == 6 && ccwPin == 5)) {
 		DDRD &= ~(1 << 0x05);
