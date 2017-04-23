@@ -44,23 +44,23 @@ void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, floa
     output = output / currRDist;
   }
 
-  int leftSpeed = baseSpeed + output;
-  int rightSpeed = baseSpeed - output;
+  int leftSpeed = baseSpeed - output;
+  int rightSpeed = baseSpeed + output;
 
   if (leftSpeed > 100) {
-    leftSpeed = 90;
+    leftSpeed = 97;
   } else if (leftSpeed < 40) {
-    leftSpeed = 60;
+    leftSpeed = 55;
   } 
   if (rightSpeed > 100) {
-    rightSpeed = 90;
+    rightSpeed = 97;
   } else if (rightSpeed < 40) {
-    rightSpeed = 60; 
+    rightSpeed = 55; 
   }
 
   leftMotor.rotateCCW(leftSpeed);
-  rightMotor.rotateCW(rightSpeed); 
-  Serial.print("KP:  ");
+  rightMotor.rotateCCW(rightSpeed); 
+  /*Serial.print("KP:  ");
   Serial.print(kp);
   Serial.print("   ");
   Serial.print("KD:  ");
@@ -77,7 +77,7 @@ void Car::forward(int currLDist, int currRDist, int oldLDist, int oldRDist, floa
   Serial.print("   ");
   Serial.print("rightSpeed:  ");
   Serial.print(rightSpeed);
-  Serial.println("   ");
+  Serial.println("   ");*/
 	
 }
 
@@ -88,16 +88,16 @@ void Car::reverse() {
 
 void Car::turnLeft(float angle) {
   float prop = angle / 360.0;
-  int num = (int) (prop * 57); //NEED TO CALCULATE NUM
+  int num = (int) (prop * 58); //NEED TO CALCULATE NUM
   int cntLeft = 0;
   int prevSampleLeft;
   int currSampleLeft;
   int cntRight = 0;
   int prevSampleRight;
   int currSampleRight;
-  int turnSpeed = 55;
+  int turnSpeed = 75;
   leftMotor.rotateCW(turnSpeed);
-  rightMotor.rotateCW(turnSpeed);
+  rightMotor.rotateCCW(turnSpeed);
 
 
     DDRD &= ~(1 << PD7);
@@ -139,16 +139,16 @@ void Car::turnLeft(float angle) {
 
 void Car::turnRight(float angle) {
   float prop = angle / 360.0;
-  int num = (int) (prop * 55);
+  int num = (int) (prop * 56);
   int cntLeft = 0;
   int prevSampleLeft;
   int currSampleLeft;
   int cntRight = 0;
   int prevSampleRight;
   int currSampleRight;
-  int turnSpeed = 55;
+  int turnSpeed = 75;
   leftMotor.rotateCCW(turnSpeed);
-  rightMotor.rotateCCW(turnSpeed);
+  rightMotor.rotateCW(turnSpeed);
 
 
     DDRD &= ~(1 << PD7);

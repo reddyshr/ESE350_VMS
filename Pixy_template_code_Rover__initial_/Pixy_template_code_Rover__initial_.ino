@@ -26,10 +26,13 @@ int getColor() {
 }
 
 void sendColor() {
+  Serial.print("sending color: ");
+  Serial.println(colorSignature);
   Wire.write(colorSignature);
+  
 }
 
-/*
+
 void decode_color(int signature) {
   if(signature == 1) { 
       Serial.println("Green "); 
@@ -43,13 +46,13 @@ void decode_color(int signature) {
     else { 
       Serial.println("No Object Detected");
     }
-}*/
+}
 
 
 //Constructs a blank Pixy object for use. 
 void setup() {
   Wire.begin(6);
-  Wire.onReceive(sendColor);
+  Wire.onRequest(sendColor);
   Serial.begin(9600); 
   pixy.init(); 
 }
@@ -61,4 +64,6 @@ void loop() {
     val = getColor(); 
   }
   colorSignature = pixy.blocks[val].signature;
+  decode_color(pixy.blocks[val].signature);
+  delay(10);
 }

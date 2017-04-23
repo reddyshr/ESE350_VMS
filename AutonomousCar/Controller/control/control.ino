@@ -15,7 +15,7 @@ Adafruit_9DOF                dof   = Adafruit_9DOF();
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified   mag   = Adafruit_LSM303_Mag_Unified(30302);
 bool cont;
-Car car(5, 6, 11, 3);
+Car car(3, 11, 5, 6);
 //int oldLeftDist = 0;
 //int oldRightDist = 0;
 //int currLeftDist;
@@ -24,19 +24,14 @@ Car car(5, 6, 11, 3);
 int oldDist[5];
 int currDist[5];
 
-void initSensors()
-{
-  if(!mag.begin())
-  {
-    /* There was a problem detecting the LSM303 ... check your connections */
-    Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
-    while(1);
-  }
-}
-
 void getAverageReadings() {
+  currDist[0] = 0;
+  currDist[1] = 0;
+  currDist[2] = 0;
+  currDist[3] = 0;
+  currDist[4] = 0;
   int i = 0;
-  while (i < 3) {
+  while (i < 1) {
     Wire.requestFrom(8, 5);
     if (Wire.available()) {
       currDist[0] = currDist[0] + Wire.read();
@@ -47,11 +42,11 @@ void getAverageReadings() {
     }
     i++;
   }
-  currDist[0] = currDist[0] / 3;
+  /*currDist[0] = currDist[0] / 3;
   currDist[1] = currDist[1] / 3;
   currDist[2] = currDist[2] / 3; 
   currDist[3] = currDist[3] / 3;
-  currDist[4] = currDist[4] / 3; 
+  currDist[4] = currDist[4] / 3; */
 
   Serial.print("s1: ");
   Serial.print(currDist[0]);
@@ -65,24 +60,12 @@ void getAverageReadings() {
   Serial.println(currDist[4]);
 }
 
-void dead_end() {
-  /*if (currDist[1] <= 20 && currDist[2] <= 20 && currDist[3] <= 20) {
-    //need to turn around
-    while (currDist[2] < 50) {
-      car.turnLeft(20, dof, mag);
-      getAverageReadings();
-    }
-  }*/
-   while (currDist[2] < 60) {
-      car.turnLeft(20, dof, mag);
-      getAverageReadings();
-    }
+void dead_end() { 
 }
 
 
 void setup() {
   Serial.begin(9600);
-  initSensors();
   Wire.begin();
   oldDist[0] = 0;
   oldDist[1] = 0;
@@ -98,19 +81,31 @@ void setup() {
 
 void loop() {
   getAverageReadings();
-  if (currDist[2] <= 30 || currDist[1] <= 20 || currDist[3] <= 20) {
-    car.brake();
-    dead_end();
+  /*if (currDist[2] <= 30) {
+    car.turnRight(100);
+    delay(1000);
   }
   else {
-    car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1, dof, mag);
+     car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1);
+     delay(100);
+  }*/
+  if (currDist[2] <= 40 || currDist[1] <= 30) {
+    car.brake();
+    delay(1000);
+    while (currDist[2] <= 100 || currDist[1] <= 40) {
+      car.turnRight(15);
+      getAverageReadings();
+      delay(500);
+    }
   }
-  
+  else {
+    car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1);
+  }
   //COPY DISTANCE READINGS FOR NEXT ITERATION
   oldDist[0] = currDist[0];
   oldDist[1] = currDist[1];
   oldDist[2] = currDist[2];
   oldDist[3] = currDist[3];
   oldDist[4] = currDist[4];
-  delay(50);
+  delay(1000);
 }
