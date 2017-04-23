@@ -26,10 +26,8 @@ int getColor() {
 }
 
 void sendColor() {
-  Serial.print("sending color: ");
-  Serial.println(colorSignature);
+  //send one byte
   Wire.write(colorSignature);
-  
 }
 
 
@@ -65,5 +63,5 @@ void loop() {
   }
   colorSignature = pixy.blocks[val].signature;
   decode_color(pixy.blocks[val].signature);
-  delay(10);
+  delay(50);
 }
