@@ -33,13 +33,13 @@ void sendColor() {
 
 void decode_color(int signature) {
   if(signature == 1) { 
-      Serial.println("Green "); 
+      Serial.println("Orange"); 
     }
     else if (signature == 2) {
-      Serial.println("Pink"); 
+      Serial.println("Green"); 
     }
     else if (signature == 3) { 
-      Serial.println("Orange"); 
+      Serial.println("Pink"); 
     }
     else { 
       Serial.println("No Object Detected");
@@ -62,6 +62,10 @@ void loop() {
     val = getColor(); 
   }
   colorSignature = pixy.blocks[val].signature;
-  decode_color(pixy.blocks[val].signature);
-  delay(50);
+  //decode_color(pixy.blocks[val].signature);
+  /*if (i % 40) {
+     decode_color(pixy.blocks[val].signature);
+  }*/
+  
+  delay(100);
 }
