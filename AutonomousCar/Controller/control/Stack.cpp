@@ -19,6 +19,10 @@ using namespace std;
   Stack::Stack() {
       head = -1;
   }
+
+  int Stack::getSize() {
+    return head = 1;
+  }
   
   void Stack::pushVal(int val) {
      if (head == 19) {

@@ -19,6 +19,7 @@ class Stack {
     Stack();
     void pushVal(int val);
     int popVal();
+    int getSize();
     
   private:
       int head;
