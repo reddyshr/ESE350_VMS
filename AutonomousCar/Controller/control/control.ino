@@ -10,6 +10,7 @@
 #include "Motor.h"
 #include "Car.h"
 #include "PID.h"
+
 /* Assign a unique ID to the sensors */
 Adafruit_9DOF                dof   = Adafruit_9DOF();
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
@@ -42,7 +43,7 @@ void getAverageReadings() {
   currDist[2] = currDist[2] / 3; 
   currDist[3] = currDist[3] / 3;
   currDist[4] = currDist[4] / 3; 
-  /*
+  
   Serial.print("s1: ");
   Serial.print(currDist[0]);
   Serial.print(" s2: ");
@@ -52,15 +53,18 @@ void getAverageReadings() {
   Serial.print(" s4: ");
   Serial.print(currDist[3]);
   Serial.print(" s5: ");
-  Serial.println(currDist[4]);*/
+  Serial.println(currDist[4]);
 }
 
 void dead_end() {
-  if (currDist[0] <= 50 && currDist[1] <= 50 && currDist[2] <= 50 && currDist[3] <=50 && currDist[4] <= 50) {
-    car.turnRight(160); 
+  if (currDist[0] <= 40 && currDist[1] <= 40 && currDist[2] <= 40 && currDist[3] <= 40 && currDist[4] <= 40) {
+    //car.turnRight(160); 
+    car.brake();
   }
   else if (currDist[0] >= 30 && currDist[4] >= 30) {
-    randomSeed(currDist[4]);  //initialize to get pseudo-random number
+    car.turnLeft(30);
+    car.turnRight(30);
+    //randomSeed(currDist[4]);  //initialize to get pseudo-random number
     long rand = random(200);  //get random number from 0 to 200
     if (rand < 55L) {
       while (currDist[2] <= 80 || currDist[3] <= 40) {
@@ -71,7 +75,7 @@ void dead_end() {
     }
     else {
       while (currDist[2] <= 80 || currDist[3] <= 40) {
-        car.turnLeft(10);
+        car.turnRight(10);
         delay(50);
         getAverageReadings();
       }
@@ -99,6 +103,7 @@ void dead_end() {
 
 void setup() {
   Serial.begin(9600);
+  randomSeed(356);
   Wire.begin();
   oldDist[0] = 0;
   oldDist[1] = 0;
@@ -113,6 +118,7 @@ void setup() {
 }
 
 void loop() {
+  random(200);
   getAverageReadings();
   if (currDist[2] <= 25) {
     car.brake();
@@ -129,10 +135,17 @@ void loop() {
     delay(50);
     getAverageReadings(); 
   }
+  /*else if (currDist[2] >= 50 && currDist[4] >= 50) {
+    car.turnRight(45);
+    //get color reading
+  }
+  else if (currDist[2] >= 50 && currDist[0] >= 50) {
+    car.turnLeft(45);
+    //get color reading
+  }*/
   else {
     car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1);
   }
-  
   oldDist[0] = currDist[0];
   oldDist[1] = currDist[1];
   oldDist[2] = currDist[2];
