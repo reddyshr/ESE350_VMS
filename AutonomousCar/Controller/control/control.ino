@@ -10,6 +10,7 @@
 #include "Motor.h"
 #include "Car.h"
 #include "PID.h"
+#include "Stack.h"
 
 /* Assign a unique ID to the sensors */
 Adafruit_9DOF                dof   = Adafruit_9DOF();
@@ -19,6 +20,15 @@ bool cont;
 Car car(3, 11, 5, 6);
 int oldDist[5];
 int currDist[5];
+
+//0 is not looked at/none
+//1 is left turn
+//2 is straight
+//3 is right turn
+bool turnedBack = false;
+int currColor = 0;
+int orange = 0;
+Stack orangeStack;
 
 void getAverageReadings() {
   currDist[0] = 0;
@@ -44,7 +54,7 @@ void getAverageReadings() {
   currDist[3] = currDist[3] / 3;
   currDist[4] = currDist[4] / 3; 
   
-  Serial.print("s1: ");
+  /*Serial.print("s1: ");
   Serial.print(currDist[0]);
   Serial.print(" s2: ");
   Serial.print(currDist[1]);
@@ -53,27 +63,37 @@ void getAverageReadings() {
   Serial.print(" s4: ");
   Serial.print(currDist[3]);
   Serial.print(" s5: ");
-  Serial.println(currDist[4]);
+  Serial.println(currDist[4]);*/
 }
 
 void dead_end() {
   if (currDist[0] <= 40 && currDist[1] <= 40 && currDist[2] <= 40 && currDist[3] <= 40 && currDist[4] <= 40) {
-    //car.turnRight(160); 
-    car.brake();
+    if (currColor == 0) {
+      car.brake();
+    } else if (currColor = 1) {
+      car.turnLeft(180);
+      turnedBack = true;
+      orange = 3;
+      Serial.println(orange);
+    }
+    
   }
   else if (currDist[0] >= 30 && currDist[4] >= 30) {
-    car.turnLeft(30);
-    car.turnRight(30);
-    //randomSeed(currDist[4]);  //initialize to get pseudo-random number
-    long rand = random(200);  //get random number from 0 to 200
-    if (rand < 55L) {
+    if (orange == 0) {
       while (currDist[2] <= 80 || currDist[3] <= 40) {
         car.turnLeft(10);
         delay(50);
         getAverageReadings();
       }
-    }
-    else {
+      orange = 1;
+      currColor = 1;
+    } else if (orange == 1) {
+      while (currDist[2] <= 80 || currDist[3] <= 40) {
+        car.turnLeft(10);
+        delay(50);
+        getAverageReadings();
+      }
+    } else if (orange == 3) {
       while (currDist[2] <= 80 || currDist[3] <= 40) {
         car.turnRight(10);
         delay(50);
@@ -115,10 +135,14 @@ void setup() {
   currDist[2] = 0;
   currDist[3] = 0;
   currDist[4] = 0;
+ // turnedBack = false;
+  //currColor = 0;
+  //orange = 0;
 }
 
 void loop() {
-  random(200);
+ // random(200);
+ Serial.println(orange);
   getAverageReadings();
   if (currDist[2] <= 25) {
     car.brake();
