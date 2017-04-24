@@ -88,7 +88,7 @@ void Car::reverse() {
 
 void Car::turnLeft(float angle) {
   float prop = angle / 360.0;
-  int num = (int) (prop * 58); //NEED TO CALCULATE NUM
+  int num = (int) (prop * 55); //NEED TO CALCULATE NUM
   int cntLeft = 0;
   int prevSampleLeft;
   int currSampleLeft;

@@ -3,13 +3,10 @@
 
 PixyI2C pixy(0x55); // You can set the I2C address through PixyI2C object  
 int colorSignature;
-/* COLOR SIGNATURES:
-   1 = Green
-   2 = Pink
-   3 = Orange
-*/
+
 
 int getColor() {
+  
   int maxBlock = -1;
   int maxArea = 0;
   int blocks = pixy.getBlocks();
@@ -28,6 +25,8 @@ int getColor() {
 void sendColor() {
   //send one byte
   Wire.write(colorSignature);
+  //Serial.print("Byte sent: ");
+  //Serial.println(colorSignature);
 }
 
 
@@ -56,16 +55,20 @@ void setup() {
 }
 
 void loop() {
-  colorSignature = -1;
-  int val = getColor();
-  while (val == -1) {
+  Serial.println("begin loop");
+  //colorSignature = -1;
+  //int val = getColor();
+  
+  int blocks = pixy.getBlocks();
+  Serial.println("here");
+  
+  
+  /*while (val == -1) {
     val = getColor(); 
-  }
-  colorSignature = pixy.blocks[val].signature;
-  //decode_color(pixy.blocks[val].signature);
-  /*if (i % 40) {
-     decode_color(pixy.blocks[val].signature);
   }*/
+  Serial.println("then here");
+  //colorSignature = pixy.blocks[val].signature;
+  //decode_color(pixy.blocks[val].signature);
   
   delay(100);
 }
