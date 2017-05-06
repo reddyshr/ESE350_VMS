@@ -21,14 +21,12 @@ int getColor() {
   return maxBlock;
 }
 
+/* Send the color signature to the master device */
 void sendColor() {
-  //send one byte
   Wire.write(colorSignature);
-  //Serial.print("Byte sent: ");
-  //Serial.println(colorSignature);
 }
 
-
+/* Determine what color was detected */
 void decode_color(int signature) {
   if(signature == 1) { 
       Serial.println("Orange"); 
