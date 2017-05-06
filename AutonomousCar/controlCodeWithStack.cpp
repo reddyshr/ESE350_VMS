@@ -10,6 +10,10 @@
 #include "Motor.h"
 #include "Car.h"
 #include "PID.h"
+<<<<<<< HEAD
+=======
+#include "Stack.h"
+>>>>>>> c4978aa060447f371f5ce781e25a6b2b4c2aa1ad
 
 /* Assign a unique ID to the sensors */
 Adafruit_9DOF                dof   = Adafruit_9DOF();
@@ -20,6 +24,18 @@ Car car(3, 11, 5, 6);
 int oldDist[5];
 int currDist[5];
 
+<<<<<<< HEAD
+=======
+//0 is not looked at/none
+//1 is left turn
+//2 is straight
+//3 is right turn
+bool turnedBack = false;
+int currColor = 0;
+int orange = 0;
+Stack orangeStack;
+
+>>>>>>> c4978aa060447f371f5ce781e25a6b2b4c2aa1ad
 void getAverageReadings() {
   currDist[0] = 0;
   currDist[1] = 0;
@@ -58,6 +74,7 @@ void getAverageReadings() {
 
 void dead_end() {
   if (currDist[0] <= 40 && currDist[1] <= 40 && currDist[2] <= 40 && currDist[3] <= 40 && currDist[4] <= 40) {
+<<<<<<< HEAD
     //car.turnRight(160); 
     car.brake();
   }
@@ -65,14 +82,42 @@ void dead_end() {
     //randomSeed(currDist[4]);  //initialize to get pseudo-random number
     long rand = random(200);  //get random number from 0 to 200
     if (rand < 55L) {
+=======
+    if (currColor == 0) {
+      car.brake();
+    } else if (currColor = 1) {
+      car.turnLeft(180);
+      turnedBack = true;
+      if (orange == 1) {
+        orange == 3;
+      }
+    }
+    
+  }
+  else if (currDist[0] >= 30 && currDist[4] >= 30) {
+    if (orange == 0 && currColor == 0) {
+>>>>>>> c4978aa060447f371f5ce781e25a6b2b4c2aa1ad
       while (currDist[2] <= 80 || currDist[3] <= 40) {
         car.turnLeft(10);
         delay(50);
         getAverageReadings();
       }
+<<<<<<< HEAD
     }
     else {
       while (currDist[2] <= 80 || currDist[3] <= 40) {
+=======
+      orange = 1;
+      currColor = 1;
+    } else if (orange == 1) {
+      while (currDist[2] <= 80 || currDist[3] <= 40) {
+        car.turnLeft(10);
+        delay(50);
+        getAverageReadings();
+      }
+    } else if (orange == 3) {
+      while (currDist[2] <= 80 || currDist[3] <= 40) {
+>>>>>>> c4978aa060447f371f5ce781e25a6b2b4c2aa1ad
         car.turnRight(10);
         delay(50);
         getAverageReadings();
@@ -112,10 +157,20 @@ void setup() {
   currDist[2] = 0;
   currDist[3] = 0;
   currDist[4] = 0;
+<<<<<<< HEAD
 }
 
 void loop() {
   random(200);
+=======
+  turnedBack = false;
+  currColor = 0;
+  orange = 0;
+}
+
+void loop() {
+ // random(200);
+>>>>>>> c4978aa060447f371f5ce781e25a6b2b4c2aa1ad
   getAverageReadings();
   if (currDist[2] <= 25) {
     car.brake();
@@ -132,6 +187,14 @@ void loop() {
     delay(50);
     getAverageReadings(); 
   }
+  /*else if (currDist[2] >= 50 && currDist[4] >= 50) {
+    car.turnRight(45);
+    //get color reading
+  }
+  else if (currDist[2] >= 50 && currDist[0] >= 50) {
+    car.turnLeft(45);
+    //get color reading
+  }*/
   else {
     car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1);
   }
