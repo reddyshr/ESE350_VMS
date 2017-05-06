@@ -30,6 +30,11 @@ int currColor = 0;
 int orange = 0;
 Stack orangeStack;
 
+
+/* The function below gets the distance readings from the sensors
+ * and stores them in the currDist[] array. It retrieves several
+ * values and averages them to help reduce the error
+ */
 void getAverageReadings() {
   currDist[0] = 0;
   currDist[1] = 0;
@@ -53,65 +58,57 @@ void getAverageReadings() {
   currDist[2] = currDist[2] / 3; 
   currDist[3] = currDist[3] / 3;
   currDist[4] = currDist[4] / 3; 
-  
-  /*Serial.print("s1: ");
-  Serial.print(currDist[0]);
-  Serial.print(" s2: ");
-  Serial.print(currDist[1]);
-  Serial.print(" s3: ");
-  Serial.print(currDist[2]);
-  Serial.print(" s4: ");
-  Serial.print(currDist[3]);
-  Serial.print(" s5: ");
-  Serial.println(currDist[4]);*/
 }
 
+/* The function below determines the appropriate movement based on the 
+ * readings from the sensors
+ */
 void dead_end() {
   if (currDist[0] <= 40 && currDist[1] <= 40 && currDist[2] <= 40 && currDist[3] <= 40 && currDist[4] <= 40) {
+    //encountered a dead end, get color, turn around
     if (currColor == 0) {
       car.brake();
     } else if (currColor = 1) {
       car.turnLeft(180);
       turnedBack = true;
       orange = 3;
-      Serial.println(orange);
     }
     
   }
   else if (currDist[0] >= 30 && currDist[4] >= 30) {
     if (orange == 0) {
+      //no color association, turn left as normal
       while (currDist[2] <= 80 || currDist[3] <= 40) {
         car.turnLeft(10);
-        delay(50);
         getAverageReadings();
       }
       orange = 1;
       currColor = 1;
     } else if (orange == 1) {
+      //orange means left, turn left
       while (currDist[2] <= 80 || currDist[3] <= 40) {
         car.turnLeft(10);
-        delay(50);
         getAverageReadings();
       }
     } else if (orange == 3) {
+      //orange means right, turn right
       while (currDist[2] <= 80 || currDist[3] <= 40) {
         car.turnRight(10);
-        delay(50);
         getAverageReadings();
       }
     }
   }
   else if (currDist[4] >= 30 || currDist[3] >= 30) {
+    //open right turn, turn right
     while (currDist[2] <= 80 || currDist[1] <= 40) {
       car.turnRight(10);
-      delay(50);
       getAverageReadings();
     }
   }
   else if (currDist[0] >= 30 || currDist[1] >= 30) {
+    //open left turn, turn left
     while (currDist[2] <= 80 || currDist[3] <= 40) {
       car.turnLeft(10);
-      delay(100);
       getAverageReadings();
     }
   }
@@ -135,38 +132,27 @@ void setup() {
   currDist[2] = 0;
   currDist[3] = 0;
   currDist[4] = 0;
- // turnedBack = false;
-  //currColor = 0;
-  //orange = 0;
+
 }
 
 void loop() {
- // random(200);
- Serial.println(orange);
+//get initial readings from the sensors
   getAverageReadings();
   if (currDist[2] <= 25) {
+    //obstacle encountered
     car.brake();
-    delay(50);
     dead_end();
   }
   else if (currDist[1] <= 10) {
+    //bear right
     car.turnRight(15);
-    delay(50);
     getAverageReadings(); 
   }
   else if (currDist[3] <= 10) {
+    //bear left
     car.turnLeft(15);
-    delay(50);
     getAverageReadings(); 
   }
-  /*else if (currDist[2] >= 50 && currDist[4] >= 50) {
-    car.turnRight(45);
-    //get color reading
-  }
-  else if (currDist[2] >= 50 && currDist[0] >= 50) {
-    car.turnLeft(45);
-    //get color reading
-  }*/
   else {
     car.forward(currDist[0], currDist[4], oldDist[0], oldDist[4], 0.1);
   }
