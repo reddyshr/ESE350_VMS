@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include "uart.h"
 
+const int triggerPulseHi = 2;
+const int triggerPulseLo = 14999;
+
+volatile int delay;
 volatile unsigned int start;
 volatile unsigned int end; 
 volatile unsigned int diff;
@@ -10,58 +14,78 @@ volatile int sampleCollected;
 
 
 
-void init_oc_timer1() {
-	TIMSK1  = 0;               //disable all interrupts
-	TCCR1A |= (1 << COM1A1);   //clear PB1/OC1A on output compare
+void init_timer1() {
+	//for trigger pin
+	TCCR1B |= (1 << CS10) | (1 << CS11);     //start timer, 64 prescaler
+	TCCR1A |= (1 << COM1A0);   //toggle OC1A(Pin9) compare match
 	TIMSK1 |= (1 << OCIE1A);   //enable OCA interrupt
-	TCCR1B |= (1 << CS10);     //no prescaler/start timer
-	OCR1A = TCNT1 + 79;        //79 cycles = 5us, trigger in 5 us
+	delay = triggerPulseHi;
+	OCR1A = TCNT1 + delay;    //2 cycles = 10us
+	PORTB |= (1 << PORTB1);   //Set PB1 to high
+	start = 0;                //initialize variables
+	end = 0;
+	diff = 0;
+	sampleCollected = 0;
 }
 
-void init_ic_timer1() {
-	TIMSK1  = 0;               //disable output compare interrupt
-	TIMSK1 |= (1 << ICIE1);    //enable input capt interrupt
-	TCCR1B |= (1 << ICES1);    //trigger is rising edge	
-	TIFR1  |= 0x20;            //clear the input capture flag
-}
-
-ISR(TIMER1_CAPT_vect) {
-	//trigger is rising edge
-	if (((TCCR1B & (1 << ICES1)) >> ICES1) == 1) {
-		start   = ICR1;           //rising edge input capture value
-		TCCR1B &= ~(1 << ICES1)   //set trigger to falling edge
-		TIFR1  |= 0x20;           //clear the input capture flag
-	}
-  //trigger is falling edge
-	else {
-		end = ICR1;               //falling edge input capture value       
-		diff = end - start;       //calculate pulse width  
-		sampleCollected = 1;
-	}
+void init_ic() {
+	//for echo pin
+	TIMSK1 |= (1 << ICIE1);    //enable input capture
+	TCCR1B |= (1 << ICES1);    //rising edge
+	TIFR1  |= 0x20;            //clear input capture flag
 }
 
 ISR(TIMER1_COMPA_vect) {
-	DDRB &= ~(1 << PB1);       //Set PB1 to input
-	init_ic_timer1();          //set timer1 for input capture
-	TCNT1 = 0;                 //reset timer count
+	if (delay == triggerPulseHi) {
+		delay = triggerPulseLo;
+		OCR1A += delay;
+	}
+	else if (delay == triggerPulseLo) {
+		delay = triggerPulseHi;
+		OCR1A += delay;
+	}
+	else {
+		printf("error\n");
+	}
+}
+
+ISR(TIMER1_CAPT_vect) {
+	if (((TCCR1B & (1 << ICES1)) >> ICES1) == 1) {
+		//triggered on rising edge, set to falling edge
+		start = TCNT1;
+		TCCR1B &= ~(1 << ICES1); 
+		TIFR1  |= 0x20; 
+	}
+	else if (((TCCR1B & (1 << ICES1)) >> ICES1) == 0) {
+		//triggered on falling edge, find pulse width
+		end = TCNT1;
+		diff = end - start;
+		sampleCollected = 1;
+		TCCR1B |= (1 << ICES1); 
+		TIFR1  |= 0x20; 
+	}
+	else {
+		printf("error in input capture!\n");
+	}
 }
 
 
 int main(void) {
-	DDRB  |= (1 << PB1);      //PB1 is output
-	PORTB |= (1 << PORTB1);   //Set PB1 to high
-	sampleCollected = 0;
-	init_oc_timer1();
+	cli();
+	uart_init();
+	DDRB  |= (1 << PB1);      //set PB1(Pin9) is output
+	DDRB  &= ~(1 << PB0);     //set PB0(Pin8) as input
 	sei();
+	init_timer1();
+	init_ic();
 	
   while(1) {
-		if (sampleCollected) {
+		if (sampleCollected == 1) {
 			printf("Pulse width: %u\n", diff);
-			TIMSK1  = 0;             //disable interrupts
-			DDRB   |= (1 << PB1);    //PB1 is output
-			PORTB  |= (1 << PORTB1); //Set PB1 to high
-			TCNT1   = 0;             //clear timer count
-			init_oc_timer1();        //reset so process repeats
+			//reset variables
+			start = 0;                
+			end = 0;
+			diff = 0;
 			sampleCollected = 0;
 		}
   }

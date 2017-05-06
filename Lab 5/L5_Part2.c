@@ -6,11 +6,17 @@
 
 int main() {
 	//Do we need to change the conversion rate with ADCSRA?
+	uart_init();
 	DDRC   |= (1 << PC0);
 	ADMUX   = 0;                           //set analog channel as PC0/ADC0  
 	ADMUX  |= (1 << REFS0);                //AVCC is ref voltage
 	ADCSRA |= (1 << ADEN) | (1 << ADATE);  //enable ADC and auto trigger
 	ADCSRA |= (1 << ADSC);                 //start conversion
-	while((ADCSRA & (1 << ADSC)) >> ADSC); //wait for conversion to finish
-	printf(ADC);
+	/*
+	while(ADCSRA & (1 << ADSC)) {
+		//wait for conversion to finish
+		printf("waiting...\n");
+	} */
+	
+	printf("%u\n", (uint16_t) ADC);
 }
