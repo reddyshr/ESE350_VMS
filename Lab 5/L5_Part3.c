@@ -7,11 +7,12 @@
 volatile int delay;
 //sets timer to CTC mode
 void enable_timer() {
-	TCCR0A &= ~(1 << WGM00);  //set timer to CTC mode, top OCRA
+	//set timer to CTC mode, top OCRA
+	TCCR0A &= ~(1 << WGM00);  
 	TCCR0A |= (1 << WGM01);
 	TCCR0A |= (1 << COM0A0);  //toggle OC0A on compare match, PIN6
-	TIMSK0 |= (1 << OCIEA);   //enable output compare interrupt
-	TCNT0   = 0;
+	TIMSK0 |= (1 << 1);   //enable output compare interrupt
+	OCR0A = delay;
 }
 
 //temp function to test if we can output the correct frequencies
@@ -54,12 +55,14 @@ void decode(int freq) {
 }
 
 ISR(TIMER0_COMPA_vect) {
-	TCNT0 = 0;
+	OCR0A = delay;
 }
 
 int main() {
 	//start timer, 64 prescaler
-	TCCR0B |= (1 << CS01) | (1 << CS00);  
+	TCCR0B |= (1 << CS01) | (1 << CS00); 
+	DDRD |= (1 << PD6);
+	uart_init(); 
 	while(1) {
 		char input[100];
 		scanf("%s", &input);
@@ -70,7 +73,9 @@ int main() {
 				printf("invalid frequency\n");
 				continue;
 			}
+			printf("frequency is: %u\n", freq);
 			decode(freq);
+			printf("Enter frequency: \n");
 		}
 	}
 	return 1;
